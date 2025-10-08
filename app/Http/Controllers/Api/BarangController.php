@@ -12,8 +12,10 @@ class BarangController extends Controller
     // GET /api/barang
     public function index()
     {
-        $barangs = Barang::with('detailBarang')->get();
+        // pakai pagination biar nggak berat kalau data banyak
+        $barangs = Barang::with('detailBarang')->paginate(10);
         return response()->json($barangs);
+
     }
 
     // POST /api/barang
@@ -31,18 +33,23 @@ class BarangController extends Controller
         ]);
 
         $barang = Barang::create($request->only([
-            'nama_barang', 'kategori', 'jumlah_stok', 'stok_min', 'id_supplier', 'gambar'
+            'nama_barang',
+            'kategori',
+            'jumlah_stok',
+            'stok_min',
+            'id_supplier',
+            'gambar'
         ]));
 
-        if($request->has('detail')) {
-    foreach($request->detail as $d) {
-        $barang->detailBarang()->create([
-            'merek' => $d['merek'] ?? '',
-            'tipe' => $d['tipe'] ?? '',
-            'ukuran' => $d['ukuran'] ?? ''
-        ]);
-    }
-}
+        if ($request->has('detail')) {
+            foreach ($request->detail as $d) {
+                $barang->detailBarang()->create([
+                    'merek' => $d['merek'] ?? '',
+                    'tipe' => $d['tipe'] ?? '',
+                    'ukuran' => $d['ukuran'] ?? ''
+                ]);
+            }
+        }
 
 
         return response()->json($barang->load('detailBarang'), 201);
@@ -60,21 +67,26 @@ class BarangController extends Controller
     {
         $barang = Barang::findOrFail($id);
         $barang->update($request->only([
-            'nama_barang', 'kategori', 'jumlah_stok', 'stok_min', 'id_supplier', 'gambar'
+            'nama_barang',
+            'kategori',
+            'jumlah_stok',
+            'stok_min',
+            'id_supplier',
+            'gambar'
         ]));
 
         // Update detail barang (opsional: hapus dan buat baru)
-        if($request->has('detail')) {
+        if ($request->has('detail')) {
             // hapus dulu detail lama
             $barang->detailBarang()->delete();
 
-           foreach($request->detail as $d) {
-    $barang->detailBarang()->create([
-        'merek' => $d['merek'] ?? '',
-        'tipe' => $d['tipe'] ?? '',
-        'ukuran' => $d['ukuran'] ?? ''
-    ]);
-}
+            foreach ($request->detail as $d) {
+                $barang->detailBarang()->create([
+                    'merek' => $d['merek'] ?? '',
+                    'tipe' => $d['tipe'] ?? '',
+                    'ukuran' => $d['ukuran'] ?? ''
+                ]);
+            }
         }
 
         return response()->json($barang->load('detailBarang'));

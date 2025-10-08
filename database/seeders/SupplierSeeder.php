@@ -14,9 +14,9 @@ class SupplierSeeder extends Seeder
      */
     public function run()
     {
-         \App\Models\Supplier::create([
-        'nama_supplier' => 'PT Maju Jaya',
-        'notelp_supplier' => '08123456789'
-    ]);
+        \App\Models\Supplier::create([
+            'nama_supplier' => 'PT Maju Jaya',
+            'notelp_supplier' => '08123456789'
+        ]);
     }
 }

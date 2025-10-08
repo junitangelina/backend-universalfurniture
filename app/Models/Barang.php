@@ -21,10 +21,10 @@ class Barang extends Model
     ];
 
     // Relasi: Barang punya 1 detail
-public function detailBarang()
-{
-    return $this->hasMany(DetailBarang::class, 'id_barang', 'id_barang');
-}
+    public function detailBarang()
+    {
+        return $this->hasMany(DetailBarang::class, 'id_barang', 'id_barang');
+    }
 
     // Relasi: Barang dimiliki 1 supplier
     public function supplier()

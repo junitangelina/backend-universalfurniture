@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\StokOpnameController;
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
@@ -29,7 +30,12 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Welcome Kepala Gudang!']);
     });
 
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
     Route::apiResource('supplier', SupplierController::class);
     Route::apiResource('barang', BarangController::class);
 
+    Route::middleware(['auth:sanctum', 'role:kepalagudang'])->group(function () {
+        Route::apiResource('stokopname', StokOpnameController::class);
+});
 });

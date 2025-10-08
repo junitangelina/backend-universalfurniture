@@ -23,7 +23,7 @@ class SupplierController extends Controller
             'telepon' => 'nullable|string'
         ]);
 
-        $supplier = Supplier::create($request->only(['nama_supplier','alamat','telepon']));
+        $supplier = Supplier::create($request->only(['nama_supplier', 'alamat', 'telepon']));
         return response()->json($supplier, 201);
     }
 
@@ -38,7 +38,7 @@ class SupplierController extends Controller
     public function update(Request $request, $id)
     {
         $supplier = Supplier::findOrFail($id);
-        $supplier->update($request->only(['nama_supplier','alamat','telepon']));
+        $supplier->update($request->only(['nama_supplier', 'alamat', 'telepon']));
         return response()->json($supplier);
     }
 
