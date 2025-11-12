@@ -5,6 +5,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\StokOpnameController;
+use App\Http\Controllers\Api\PurchaseRequestController;
+use App\Http\Controllers\Api\DetailPurchaseRequestController;
+
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
@@ -36,6 +39,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('barang', BarangController::class);
 
     Route::middleware(['auth:sanctum', 'role:kepalagudang'])->group(function () {
-        Route::apiResource('stokopname', StokOpnameController::class);
+    Route::apiResource('stokopname', StokOpnameController::class);  
 });
+
+    Route::middleware(['role:admin,owner'])->group(function () {
+    Route::apiResource('purchaserequest', PurchaseRequestController::class);
+    Route::apiResource('detailpurchaserequest', DetailPurchaseRequestController::class);
+    });
 });
