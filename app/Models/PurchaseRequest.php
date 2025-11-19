@@ -9,7 +9,7 @@ class PurchaseRequest extends Model
 {
     use HasFactory;
 
-    protected $table = 'purchase_requests';
+    protected $table = 'purchase_request';
     protected $primaryKey = 'id_PR';
     protected $fillable = ['tgl_PR', 'status_PR', 'id_admin', 'id_owner'];
 
