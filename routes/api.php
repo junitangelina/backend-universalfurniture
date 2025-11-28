@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Models\DetailPurchaseOrder;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BarangController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\StokOpnameController;
 use App\Http\Controllers\Api\PurchaseRequestController;
 use App\Http\Controllers\Api\DetailPurchaseRequestController;
+use App\Http\Controllers\Api\PurchaseOrderController;
+use App\Http\Controllers\Api\DetailPurchaseOrderController;
 
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -39,11 +42,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('barang', BarangController::class);
 
     Route::middleware(['auth:sanctum', 'role:kepalagudang'])->group(function () {
-    Route::apiResource('stokopname', StokOpnameController::class);  
-});
+        Route::apiResource('stokopname', StokOpnameController::class);
+    });
 
     Route::middleware(['role:admin,owner'])->group(function () {
-    Route::apiResource('purchaserequest', PurchaseRequestController::class);
-    Route::apiResource('detailpurchaserequest', DetailPurchaseRequestController::class);
+        Route::apiResource('purchaserequest', PurchaseRequestController::class);
+        Route::apiResource('detailpurchaserequest', DetailPurchaseRequestController::class);
+        Route::apiResource('purchaseorder', PurchaseOrderController::class);
+        Route::apiResource('detailpurchaseorder', DetailPurchaseOrderController::class);
+        Route::get('/purchase-order/{id}/whatsapp', [PurchaseOrderController::class, 'sendWhatsApp']);
+
+
     });
 });
