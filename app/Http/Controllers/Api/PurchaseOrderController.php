@@ -54,7 +54,7 @@ class PurchaseOrderController extends Controller
             $po = PurchaseOrder::create([
                 'referensi_PO' => $ref,
                 'tgl_PO' => $request->tgl_PO,
-                'status_PO' => 'dibuat', // default
+                'status_PO' => 'pending', // default
                 'id_PR' => $request->id_PR,
             ]);
 

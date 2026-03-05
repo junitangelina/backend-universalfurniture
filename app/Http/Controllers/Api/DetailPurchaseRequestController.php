@@ -19,9 +19,9 @@ class DetailPurchaseRequestController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_PR' => 'required|exists:purchase_requests,id',
-            'id_barang' => 'required|exists:barangs,id',
-            'id_supplier' => 'required|exists:suppliers,id',
+            'id_PR' => 'required|exists:purchase_request,id_PR',
+            'id_barang' => 'required|exists:barang,id_barang',
+            'id_supplier' => 'required|exists:supplier,id_supplier',
             'hargabarangPR' => 'required|numeric',
             'kuantitasbarangPR' => 'required|integer',
         ]);

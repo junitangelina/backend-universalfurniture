@@ -18,27 +18,44 @@ class PurchaseRequestController extends Controller
     }
 
     // POST /purchase-request
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'tgl_PR' => 'required|date',
-            'status_PR' => 'required|string',
-            'id_admin' => 'nullable|exists:admins,id',
-            'id_owner' => 'nullable|exists:owners,id',
-        ]);
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'tgl_PR'             => 'required|date',
+        'status_PR'          => 'required|string',
+        'id_admin'           => 'nullable|exists:admin,id_admin',
+        'id_owner'           => 'nullable|exists:owner,id_owner',
+        'id_barang'          => 'required|exists:barang,id_barang',
+        'id_supplier'        => 'required|exists:supplier,id_supplier',
+        'hargabarangPR'      => 'required|numeric',
+        'kuantitasbarangPR'  => 'required|integer',
+    ]);
 
-        // aturan: admin atau owner salah satu wajib isi
-        if (empty($validated['id_admin']) && empty($validated['id_owner'])) {
-            return response()->json(['message' => 'id_admin atau id_owner wajib diisi'], 422);
-        }
-
-        $purchaseRequest = PurchaseRequest::create($validated);
-
-        return response()->json([
-            'message' => 'Purchase Request berhasil dibuat',
-            'data' => $purchaseRequest,
-        ], 201);
+    if (empty($validated['id_admin']) && empty($validated['id_owner'])) {
+        return response()->json(['message' => 'id_admin atau id_owner wajib diisi'], 422);
     }
+
+    // Simpan PR dulu
+    $purchaseRequest = PurchaseRequest::create([
+        'tgl_PR'    => $validated['tgl_PR'],
+        'status_PR' => $validated['status_PR'],
+        'id_admin'  => $validated['id_admin'] ?? null,
+        'id_owner'  => $validated['id_owner'] ?? null,
+    ]);
+
+    // Langsung simpan detail-nya
+    $purchaseRequest->details()->create([
+        'id_barang'         => $validated['id_barang'],
+        'id_supplier'       => $validated['id_supplier'],
+        'hargabarangPR'     => $validated['hargabarangPR'],
+        'kuantitasbarangPR' => $validated['kuantitasbarangPR'],
+    ]);
+
+    return response()->json([
+        'message' => 'Purchase Request berhasil dibuat',
+        'data'    => $purchaseRequest->load('details'),
+    ], 201);
+}
 
     // GET /purchase-request/{id}
     public function show($id)
