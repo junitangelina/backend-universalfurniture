@@ -53,5 +53,73 @@ class AuthController extends Controller
             'success' => false,
             'message' => 'Login gagal, username atau password salah',
         ], 401);
+
     }
+
+     public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['success' => true, 'message' => 'Logout berhasil.']);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        $role = match (true) {
+            $user instanceof Admin        => 'admin',
+            $user instanceof Owner        => 'owner',
+            $user instanceof KepalaGudang => 'kepalagudang',
+            default                       => 'unknown',
+        };
+
+        $usernameField = match ($role) {
+            'admin'        => 'username_admin',
+            'owner'        => 'username_owner',
+            'kepalagudang' => 'username_gudang',
+            default        => null,
+        };
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'id'       => $user->getKey(),
+                'username' => $usernameField ? $user->$usernameField : null,
+                'role'     => $role,
+            ],
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+        $role = match (true) {
+            $user instanceof Admin        => 'admin',
+            $user instanceof Owner        => 'owner',
+            $user instanceof KepalaGudang => 'kepalagudang',
+            default                       => null,
+        };
+
+        $passwordColumn = match ($role) {
+            'admin'        => 'password_admin',
+            'owner'        => 'password_owner',
+            'kepalagudang' => 'password_gudang',
+            default        => null,
+        };
+
+        if (!$passwordColumn || !Hash::check($request->current_password, $user->$passwordColumn)) {
+            return response()->json(['success' => false, 'message' => 'Password lama tidak sesuai.'], 422);
+        }
+
+        $user->update([$passwordColumn => Hash::make($request->password)]);
+
+        return response()->json(['success' => true, 'message' => 'Password berhasil diubah.']);
+    }
+
 }
+
+

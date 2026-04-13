@@ -10,7 +10,7 @@ class Supplier extends Model
     use HasFactory;
     protected $table = 'supplier';
     protected $primaryKey = 'id_supplier';
-    protected $fillable = ['nama_supplier', 'notelp_supplier'];
+    protected $fillable = ['nama_supplier', 'notelp_supplier','alamat_supplier'];
     public function barang()
     {
         return $this->hasMany(Barang::class, 'id_supplier', 'id_supplier');
