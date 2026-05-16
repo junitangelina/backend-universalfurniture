@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
+use App\Models\ActivityLog; 
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -69,6 +70,9 @@ class SupplierController extends Controller
             'alamat_supplier',
         ]));
 
+          // ← tambah activity log
+        ActivityLog::catat($request->user(), "Menambahkan supplier '{$supplier->nama_supplier}'", 'supplier');
+
         return response()->json([
             'success' => true,
             'message' => 'Supplier berhasil ditambahkan.',
@@ -109,6 +113,8 @@ class SupplierController extends Controller
             'alamat_supplier',
         ]));
 
+        ActivityLog::catat($request->user(), "Memperbarui supplier '{$supplier->nama_supplier}'", 'supplier');
+
         return response()->json([
             'success' => true,
             'message' => 'Supplier berhasil diupdate.',
@@ -133,6 +139,8 @@ class SupplierController extends Controller
         }
 
         $supplier->delete();
+
+        ActivityLog::catat(request()->user(), "Menghapus supplier '{$supplier->nama_supplier}'", 'supplier');
 
         return response()->json([
             'success' => true,

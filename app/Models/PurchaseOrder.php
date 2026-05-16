@@ -12,13 +12,17 @@ class PurchaseOrder extends Model
     protected $table = 'purchase_order';
     protected $primaryKey = 'id_PO';
 
-    protected $fillable = [
+   protected $fillable = [
         'referensi_PO',
         'tgl_PO',
-        'status_PO',
-        'id_PR',
+        'status_PO',  // diajukan / disetujui / ditolak / selesai
+        'id_PR',      // dari PR mana PO ini dibuat
     ];
-
+ 
+    protected $casts = [
+        'tgl_PO' => 'date',
+    ];
+    
     // Relasi ke Purchase Request
     public function purchaseRequest()
     {

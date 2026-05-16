@@ -11,6 +11,14 @@ class Barang extends Model
 
     protected $table      = 'barang';
     protected $primaryKey = 'id_barang';
+    protected $appends = ['gambar_url'];
+
+public function getGambarUrlAttribute()
+{
+      return $this->gambar
+            ? secure_asset("storage/{$this->gambar}")
+            : null;
+}
 
     protected $fillable = [
         'nama_barang',
@@ -33,4 +41,9 @@ class Barang extends Model
     {
         return $this->belongsTo(Supplier::class, 'id_supplier', 'id_supplier');
     }
+
+    public function detailTransaksi()
+{
+    return $this->hasMany(DetailTransaksi::class, 'id_barang', 'id_barang');
+}
 }

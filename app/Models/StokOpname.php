@@ -15,6 +15,11 @@ class StokOpname extends Model
     protected $fillable = [
         'tgl_opname',
         'id_kepala_gudang',
+        'status',
+    ];
+
+      protected $casts = [
+        'tgl_opname' => 'date',
     ];
 
     public function details()

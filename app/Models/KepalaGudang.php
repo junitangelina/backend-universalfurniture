@@ -18,6 +18,11 @@ class KepalaGudang extends Authenticatable
     protected $fillable = [
         'username_gudang',
         'password_gudang',
+         'nama_lengkap',
+        'email',
+        'no_telepon',
+        'foto',
+        'alamat_toko',
     ];
 
     protected $hidden = [

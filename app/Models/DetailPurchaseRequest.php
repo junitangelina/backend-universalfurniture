@@ -11,7 +11,17 @@ class DetailPurchaseRequest extends Model
 
     protected $table = 'detail_purchase_request';
     protected $primaryKey = 'id_detail_PR';
-    protected $fillable = ['hargabarangPR', 'kuantitasbarangPR', 'id_PR', 'id_barang', 'id_supplier'];
+   protected $fillable = [
+        'id_PR',
+        'id_barang',
+        'id_supplier',
+        'hargabarangPR',      // input manual (harga beli ke supplier)
+        'kuantitasbarangPR',  // jumlah yang dipesan
+    ];
+ 
+    protected $casts = [
+        'hargabarangPR' => 'decimal:2',
+    ];
 
     public function purchaseRequest()
     {

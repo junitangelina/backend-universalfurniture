@@ -10,12 +10,13 @@ class DetailBarang extends Model
     use HasFactory;
 
     protected $table = 'detail_barang';
-    protected $primaryKey = 'id__detail_barang'; // tambahkan ini
+    protected $primaryKey = 'id_detail_barang'; // tambahkan ini
     protected $fillable = [
         'id_barang',
         'merek',
         'tipe',
-        'ukuran'
+        'ukuran',
+        'bahan'
     ];
 
     // Relasi: detail milik 1 barang

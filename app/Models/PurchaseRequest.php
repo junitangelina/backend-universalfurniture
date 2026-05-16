@@ -11,7 +11,16 @@ class PurchaseRequest extends Model
 
     protected $table = 'purchase_request';
     protected $primaryKey = 'id_PR';
-    protected $fillable = ['tgl_PR', 'status_PR', 'id_admin', 'id_owner'];
+    protected $fillable = [ 'referensi_PR',  // auto-generate: PR-2025-0001
+        'tgl_PR',
+        'status_PR',     // tertunda / disetujui / ditolak
+        'id_admin',      // siapa yang buat (nullable, salah satu diisi)
+        'id_owner',      // siapa yang buat (nullable, salah satu diisi)];
+    ];
+
+      protected $casts = [
+        'tgl_PR' => 'date',
+    ];
 
     public function admin()
     {
@@ -26,5 +35,24 @@ class PurchaseRequest extends Model
     public function details()
     {
         return $this->hasMany(DetailPurchaseRequest::class, 'id_PR', 'id_PR');
+    }
+    
+     // 1 PR bisa jadi 1 PO
+    public function purchaseOrder()
+    {
+        return $this->hasOne(PurchaseOrder::class, 'id_PR', 'id_PR');
+    }
+ 
+    // Auto-generate referensi_PR saat create
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($pr) {
+            if (empty($pr->referensi_PR)) {
+                $last = static::orderBy('id_PR', 'desc')->first();
+                $next = $last ? ($last->id_PR + 1) : 1;
+                $pr->referensi_PR = 'PR-' . date('Y') . '-' . str_pad($next, 4, '0', STR_PAD_LEFT);
+            }
+        });
     }
 }

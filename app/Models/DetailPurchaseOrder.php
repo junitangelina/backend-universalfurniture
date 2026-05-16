@@ -12,12 +12,19 @@ class DetailPurchaseOrder extends Model
     protected $table = 'detail_purchase_order';
     protected $primaryKey = 'id_detail_PO';
 
-    protected $fillable = [
-        'hargabarangPO',
-        'kuantitasbarangPO',
+     protected $fillable = [
         'id_PO',
         'id_barang',
         'id_supplier',
+        'hargabarangPO',      // otomatis copy dari hargabarangPR
+        'kuantitasbarangPO',  // otomatis copy dari kuantitasbarangPR
+        'kuantitasterimaPO',  // diisi saat barang datang (awalnya null)
+        'tgl_terima',         // diisi saat barang datang (awalnya null)
+    ];
+ 
+    protected $casts = [
+        'hargabarangPO' => 'decimal:2',
+        'tgl_terima'    => 'date',
     ];
 
     // Relasi ke Purchase Order

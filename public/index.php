@@ -1,5 +1,5 @@
 <?php
-
+header('ngrok-skip-browser-warning:true ');
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 

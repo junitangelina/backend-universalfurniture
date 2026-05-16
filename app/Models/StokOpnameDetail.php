@@ -18,6 +18,13 @@ class StokOpnameDetail extends Model
         'stok_sistem',
         'stok_asli',
         'selisih',
+        'keterangan'
+    ];
+
+    protected $casts = [
+        'stok_sistem' => 'integer',
+        'stok_asli'   => 'integer',
+        'selisih'     => 'integer',
     ];
 
     public function opname()

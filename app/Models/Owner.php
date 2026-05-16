@@ -18,6 +18,11 @@ class Owner extends Authenticatable
     protected $fillable = [
         'username_owner',
         'password_owner',
+        'nama_lengkap',
+        'email',
+        'no_telepon',
+        'foto',
+        'alamat_toko',
     ];
 
     protected $hidden = [

@@ -8,6 +8,7 @@ use App\Models\DetailBarang;
 use App\Models\Notifikasi;
 use App\Models\Admin;
 use App\Models\Owner;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -52,21 +53,42 @@ class BarangController extends Controller
             $query->whereColumn('jumlah_stok', '<=', 'stok_min');
         }
 
-        $barangs = $query->orderBy('nama_barang')
+        $barangs = $query->orderBy('created_at', 'desc')
                          ->paginate($request->per_page ?? 10);
 
         return response()->json([
             'success' => true,
-            'data'    => $barangs->items(), // fix: hanya items, bukan paginator mentah
+            'data'    => $barangs->items(),
             'meta'    => [
                 'total'        => $barangs->total(),
                 'per_page'     => $barangs->perPage(),
                 'current_page' => $barangs->currentPage(),
                 'last_page'    => $barangs->lastPage(),
-                'from'         => $barangs->firstItem(), // "1" dari "1-10 of 100"
-                'to'           => $barangs->lastItem(),  // "10" dari "1-10 of 100"
+                'from'         => $barangs->firstItem(),
+                'to'           => $barangs->lastItem(),
             ],
             'stok_menipis_count' => Barang::whereColumn('jumlah_stok', '<=', 'stok_min')->count(),
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // GET /api/barang-kategori
+    // Return semua kategori unik yang sudah ada di tabel barang.
+    // Frontend pakai ini untuk isi dropdown + opsi "Tambah baru".
+    // Nilai yang dikirim saat store/update tetap string biasa.
+    // ──────────────────────────────────────────────────────────
+    public function kategoriList()
+    {
+        $kategori = Barang::select('kategori')
+            ->distinct()
+            ->whereNotNull('kategori')
+            ->where('kategori', '!=', '')
+            ->orderBy('kategori')
+            ->pluck('kategori');
+
+        return response()->json([
+            'success' => true,
+            'data'    => $kategori,
         ]);
     }
 
@@ -91,13 +113,17 @@ class BarangController extends Controller
             'detail.*.merek'  => 'nullable|string',
             'detail.*.tipe'   => 'nullable|string',
             'detail.*.ukuran' => 'nullable|string',
-            'detail.*.bahan'  => 'nullable|string', // ← tambah bahan
+            'detail.*.bahan'  => 'nullable|string',
+        ]);
+
+        // FIX: Normalisasi kategori supaya tidak duplikat karena typo huruf besar/kecil
+        // "kursi", "Kursi", "  KURSI  " → semua jadi "Kursi"
+        $request->merge([
+            'kategori' => ucwords(strtolower(trim($request->kategori)))
         ]);
 
         $gambarPath = null;
         if ($request->hasFile('gambar')) {
-            // Simpan ke storage/app/public/barang/
-            // Akses via: http://domain.com/storage/barang/namafile.jpg
             $gambarPath = $request->file('gambar')->store('barang', 'public');
         }
 
@@ -117,14 +143,15 @@ class BarangController extends Controller
                     'merek'  => $d['merek']  ?? '',
                     'tipe'   => $d['tipe']   ?? '',
                     'ukuran' => $d['ukuran'] ?? '',
-                    'bahan'  => $d['bahan']  ?? null, // ← tambah bahan
+                    'bahan'  => $d['bahan']  ?? null,
                 ]);
             }
         }
 
-        // fix: tandai sebagai barang baru supaya tidak notif
-        // kalau stok awal memang diisi 0 saat pertama create
+        // Skip notif kalau barang baru dengan stok awal 0
         $this->checkAndNotifyStokMin($barang, isNewBarang: true);
+
+        ActivityLog::catat($request->user(), "Menambahkan barang '{$barang->nama_barang}'", 'barang');
 
         return response()->json([
             'success' => true,
@@ -138,7 +165,6 @@ class BarangController extends Controller
     // ──────────────────────────────────────────────────────────
     public function show($id)
     {
-        // fix: tambah supplier & konsisten pakai wrapper success + data
         $barang = Barang::with(['detailBarang', 'supplier'])->findOrFail($id);
 
         return response()->json([
@@ -167,8 +193,15 @@ class BarangController extends Controller
             'detail.*.merek'  => 'nullable|string',
             'detail.*.tipe'   => 'nullable|string',
             'detail.*.ukuran' => 'nullable|string',
-            'detail.*.bahan'  => 'nullable|string', // ← tambah bahan
+            'detail.*.bahan'  => 'nullable|string',
         ]);
+
+        // FIX: Normalisasi kategori kalau ikut diupdate
+        if ($request->filled('kategori')) {
+            $request->merge([
+                'kategori' => ucwords(strtolower(trim($request->kategori)))
+            ]);
+        }
 
         $data = $request->only([
             'nama_barang', 'kategori', 'harga',
@@ -193,7 +226,7 @@ class BarangController extends Controller
                     'merek'  => $d['merek']  ?? '',
                     'tipe'   => $d['tipe']   ?? '',
                     'ukuran' => $d['ukuran'] ?? '',
-                    'bahan'  => $d['bahan']  ?? null, // ← tambah bahan
+                    'bahan'  => $d['bahan']  ?? null,
                 ]);
             }
         }
@@ -202,8 +235,10 @@ class BarangController extends Controller
 
         // Cek reorder point hanya kalau stok yang diupdate
         if ($request->has('jumlah_stok')) {
-            $this->checkAndNotifyStokMin($barang); // bukan barang baru
+            $this->checkAndNotifyStokMin($barang);
         }
+
+        ActivityLog::catat($request->user(), "Memperbarui barang '{$barang->nama_barang}'", 'barang');
 
         return response()->json([
             'success' => true,
@@ -214,17 +249,17 @@ class BarangController extends Controller
 
     // ──────────────────────────────────────────────────────────
     // DELETE /api/barang/{id}
+    // FIX: inject Request supaya $request->user() tidak pakai global helper
     // ──────────────────────────────────────────────────────────
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $barang = Barang::findOrFail($id);
 
-        // fix: cek apakah barang masih dipakai di detail transaksi
-        // kalau ada → tidak bisa dihapus karena akan merusak history
-        if ($barang->detailBarang()->exists()) {
+        // Cek apakah barang masih dipakai di detail transaksi
+        if ($barang->detailTransaksi()->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Barang tidak bisa dihapus karena masih memiliki data detail.',
+                'message' => 'Barang tidak bisa dihapus karena masih memiliki data transaksi.',
             ], 422);
         }
 
@@ -233,7 +268,12 @@ class BarangController extends Controller
             Storage::disk('public')->delete($barang->gambar);
         }
 
+        $nama = $barang->nama_barang; // simpan dulu sebelum delete
+
+        $barang->detailBarang()->delete();
         $barang->delete();
+
+        ActivityLog::catat($request->user(), "Menghapus barang '{$nama}'", 'barang');
 
         return response()->json([
             'success' => true,
@@ -271,7 +311,7 @@ class BarangController extends Controller
     // ──────────────────────────────────────────────────────────
     private function checkAndNotifyStokMin(Barang $barang, bool $isNewBarang = false): void
     {
-        // fix: skip notif kalau barang baru dengan stok awal 0
+        // Skip notif kalau barang baru dengan stok awal 0
         if ($isNewBarang && $barang->jumlah_stok == 0) return;
 
         // Stok masih aman, tidak perlu notif
